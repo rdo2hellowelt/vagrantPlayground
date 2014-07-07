@@ -1,0 +1,46 @@
+
+
+# Vagrantfile. Don't touch unless you know what you're doing!
+# Read Man Pages 4 more Vagrant-Details..(C;
+# It is Recommendet to adjust the Windows Host file > C:\Windows\System32\drivers\etc\hosts
+# 127.0.0.1 playground.dev
+# 127.0.0.1 www.playground.dev
+# on Mac /. Li : sudo nano /private/etc/hosts
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  # VM Configuration
+  config.vm.box = "hashicorp/precise64"
+  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+  
+  #config.vm.box = "hashicorp/precise32"
+  
+  # Bootsraping ... sh
+  config.vm.provision :shell, path: "shellscripts/bootstrap.sh" 
+  config.vm.provision :shell, path: "shellscripts/after-boot.sh", run: "always"
+  
+  # Network.. 
+  config.vm.network :forwarded_port, host: 80, guest: 80
+  config.vm.network :private_network, ip: '169.169.69.69'
+
+  # ConfigVM
+  config.vm.provider "virtualbox" do |v|
+    v.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root", "1"]
+    
+    v.customize ["modifyvm", :id, "--memory", 2048]
+    v.customize ["modifyvm", :id, "--cpus", 2]
+   
+   # 4 neatServerchen 
+    # v.customize ["modifyvm", :id, "--memory", 256]
+    
+  end
+  
+  # SyncFolderConfig
+  config.vm.synced_folder "vhosts/", "/etc/apache2/sites-available",
+    owner: "root", group: "root"
+  config.vm.synced_folder "www/", "/var/www",
+    owner: "www-data", group: "www-data"
+
+end
